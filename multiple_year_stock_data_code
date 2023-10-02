@@ -1,0 +1,110 @@
+Sub Stock_Data()
+    
+    Dim ws As Worksheet
+    Dim i As Long
+    Dim openIdx As Integer
+    Dim totalVolume As Double
+    Dim rowCount As Long
+    Dim Delta As Double
+    Dim percentChange As Double
+    Dim bestIdx As Integer, worstIdx As Integer, mostIdx As Integer
+    Dim bestTicker As String, worstTicker As String, mostTicker As String
+    Dim bestPercentChange As Double, worstPercentChange As Double, mostTotalVolume As Double
+    
+    ' Iterate through each worksheet in the workbook
+            For Each ws In ThisWorkbook.Worksheets
+            
+            
+            ' Set headers in the current worksheet
+        ws.Range("I1").Value = "Ticker"
+        ws.Range("J1").Value = "Yearly Change"
+        ws.Range("K1").Value = "Percent Change"
+        ws.Range("L1").Value = "Total Stock Volume"
+        ws.Range("P1").Value = "Ticker"
+        ws.Range("Q1").Value = "Value"
+        ws.Range("O2").Value = "Greatest % Increase"
+        ws.Range("O3").Value = "Greatest % Decrease"
+        ws.Range("O4").Value = "Greatest Total Volume"
+        
+        totalVolume = 0
+        openIdx = 2
+        rowCount = ws.Cells(Rows.Count, "A").End(xlUp).Row
+        
+        ' Loop through rows in the current worksheet
+        For i = 2 To rowCount
+
+       ' Check if the current Ticker is different from the previous one
+            If ws.Cells(i, 1).Value <> ws.Cells(i - 1, 1).Value Then
+                
+                ' Calculate the total stock volume for the Ticker
+                totalVolume = totalVolume + ws.Cells(i, 7).Value
+                ws.Cells(openIdx, 9).Value = ws.Cells(i, 1).Value
+                ws.Cells(openIdx, 12).Value = totalVolume
+                
+                ' Calculate Yearly Change (Delta) and Percent Change
+                Delta = ws.Cells(i, 6).Value - ws.Cells(openIdx, 3).Value
+                ws.Cells(openIdx, 10).Value = Delta
+                
+                ' Apply color coding to Yearly Change based on positive or negative values
+                If Delta > 0 Then
+                    ws.Cells(openIdx, 10).Interior.ColorIndex = 4 ' Green
+                      
+                      ElseIf Delta < 0 Then
+                    ws.Cells(openIdx, 10).Interior.ColorIndex = 3 ' Red
+                      
+                      Else
+                      ws.Cells(openIdx, 10).Interior.ColorIndex = 0 ' No color
+                
+                End If
+                
+                ' Calculate Percent Change
+                If ws.Cells(openIdx, 3).Value <> 0 Then
+                    percentChange = Delta / ws.Cells(openIdx, 3).Value
+                    ws.Cells(openIdx, 11).Value = percentChange
+                
+                Else
+                    ws.Cells(openIdx, 11).Value = 0
+                
+                End If
+                
+                totalVolume = 0
+                openIdx = openIdx + 1
+            
+            Else
+                ' Accumulate the total stock volume for the current Ticker
+                totalVolume = totalVolume + ws.Cells(i, 7).Value
+            
+            End If
+        
+        Next i
+        
+        ' Find the indices for the best, worst, and most values
+        bestIdx = Application.WorksheetFunction.Match(Application.WorksheetFunction.Max(ws.Range("K2:K" & rowCount).Value), ws.Range("K2:K" & rowCount), 0)
+        worstIdx = Application.WorksheetFunction.Match(Application.WorksheetFunction.Min(ws.Range("K2:K" & rowCount).Value), ws.Range("K2:K" & rowCount), 0)
+        mostIdx = Application.WorksheetFunction.Match(Application.WorksheetFunction.Max(ws.Range("L2:L" & rowCount).Value), ws.Range("L2:L" & rowCount), 0)
+        
+        ' Get the Ticker symbols for the best, worst, and most values
+        bestTicker = ws.Cells(bestIdx + 1, 9).Value
+        worstTicker = ws.Cells(worstIdx + 1, 9).Value
+        mostTicker = ws.Cells(mostIdx + 1, 9).Value
+        
+        ' Get the actual values for the best, worst, and most
+        bestPercentChange = Application.WorksheetFunction.Max(ws.Range("K2:K" & rowCount).Value)
+        worstPercentChange = Application.WorksheetFunction.Min(ws.Range("K2:K" & rowCount).Value)
+        mostTotalVolume = Application.WorksheetFunction.Max(ws.Range("L2:L" & rowCount).Value)
+        
+        ' Format Percent Change column as a percentage
+        ws.Range("K2:K" & rowCount).NumberFormat = "0.00%"
+        
+        ' Populate the required cells with values for best, worst, and most
+        ws.Range("P2").Value = bestTicker
+        ws.Range("P3").Value = worstTicker
+        ws.Range("P4").Value = mostTicker
+        ws.Range("Q2").Value = bestPercentChange
+        ws.Range("Q3").Value = worstPercentChange
+        ws.Range("Q4").Value = mostTotalVolume
+    
+    Next ws
+
+End Sub
+
